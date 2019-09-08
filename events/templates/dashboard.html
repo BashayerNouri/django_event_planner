@@ -13,6 +13,8 @@
     </h5>
     <p class="card-text" style="color: 000034;">{{e.organizer}}</p>
     <p class="card-text" style="color: 000034;">{{e.number_of_seats}}</p>
+    <a class="btn btn-danger" href="{% url 'detail' e.id %}">Read More...</a>
+
 {%endif%} 
     {% endfor %}
 

@@ -172,6 +172,7 @@ def event_delete(request, event_id):
 
 
 #for when user try to book an event 
+#not done
 def event_book(request,event_id):
     event_obj = Event.objects.get(id=event_id)
     form = BookingForm()
