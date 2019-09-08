@@ -23,7 +23,7 @@ class BookEvent(models.Model):
     last_name = models.CharField(max_length=120)
     email = models.EmailField(max_length=70)
     phone_number = models.PositiveIntegerField()
-    booked_seats = models.PositiveIntegerField()
+    book_seats = models.PositiveIntegerField()
 
     def __str__(self):
         return self.event

@@ -181,11 +181,11 @@ def event_book(request,event_id):
             seat=form.save(commit=False)
             seat.event=event_obj
             seat.user=request.user
-            if seat.seats_booked > event_obj.seats_available:
+            if seat.book_seats > event_obj.number_of_seats:
                 print ("erorrrrr no seat")
 
             else:
-                event.number_of_seats -= seats.booked_seats
+                event_obj.number_of_seats -= seat.book_seats
                 seat.save()
                 print("booked")
                
