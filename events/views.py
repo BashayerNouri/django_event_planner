@@ -3,8 +3,12 @@ from django.contrib.auth import authenticate, login, logout
 from django.views import View
 from .forms import UserSignup, UserLogin, EventForm
 
+# for message functions
+from django.contrib import messages
+
 from .models import Event
 from django.db.models import Q
+
 
 def home(request):
     events = Event.objects.all()
@@ -22,6 +26,18 @@ def home(request):
     return render(request, 'home.html', context)
 
 
+def dashboard(request):
+    events = Event.objects.all()
+    if request.user.is_anonymous:
+        return redirect('signin')
+    if not request.user.is_staff:
+        return redirect("no-access")
+    context = {
+        "events": events
+    }
+    return render(request, 'dashboard.html', context)
+
+
 class Signup(View):
     form_class = UserSignup
     template_name = 'signup.html'
@@ -36,10 +52,10 @@ class Signup(View):
             user = form.save(commit=False)
             user.set_password(user.password)
             user.save()
-            # messages.success(request, "You have successfully signed up.")
+            messages.success(request, "You have successfully signed up.")
             login(request, user)
             return redirect("home")
-        # messages.warning(request, form.errors)
+        messages.warning(request, form.errors)
         return redirect("signup")
 
 
@@ -61,13 +77,13 @@ class Login(View):
             auth_user = authenticate(username=username, password=password)
             if auth_user is not None:
                 login(request, auth_user)
-                # messages.success(request, "Welcome Back!")
+                messages.success(request, "Welcome Back!")
                 return redirect('dashboard')
                 # the new line we added
                 # return redirect('home')
-            # messages.warning(request, "Wrong email/password combination. Please try again.")
+            messages.warning(request, "Wrong email/password combination. Please try again.")
             return redirect("login")
-        # messages.warning(request, form.errors)
+        messages.warning(request, form.errors)
         return redirect("login")
 
 
@@ -102,15 +118,20 @@ def event_detail(request, event_id):
     }
     return render(request, 'detail.html', context)
 
+
 def event_create(request):
     form = EventForm()
+    # if user not registerd go to sign in page
+    if request.user.is_anonymous:
+        return redirect('signin')
     if request.method == "POST":
         form = EventForm(request.POST, request.FILES)
         if form.is_valid():
             event = form.save(commit=False)
             event.organizer = request.user
             event.save()
-            return redirect('create')
+            messages.success(request, "Event Created Successfully")
+            return redirect('dashboard')
     context = {
         "form":form,
     }
@@ -119,11 +140,18 @@ def event_create(request):
 def event_update(request, event_id):
     event_obj = Event.objects.get(id=event_id)
     form = EventForm(instance=event_obj)
+    # if user not registerd go to sign in page
+    if request.user.is_anonymous:
+        return redirect('signin')
+    # if user not the owner of the event
+    if not request.user.is_staff:
+        return redirect("no-access")
     if request.method == "POST":
         form = EventForm(request.POST, instance=event_obj)
         if form.is_valid():
             form.save()
-            return redirect('dashboard')
+            messages.success(request, "Event Updated Successfully")
+            return redirect('detail', event_id)
     context = {
         "event_obj": event_obj,
         "form":form,
@@ -132,13 +160,42 @@ def event_update(request, event_id):
 
 def event_delete(request, event_id):
     event_obj = Event.objects.get(id=event_id)
+    if request.user.is_anonymous:
+        return redirect('signin')
+# if user not the owner of the event
+    if not request.user.is_staff:
+        return redirect("no-access")
     event_obj.delete()
+    messages.warning(request, "Event Deleted Successfully")
     return redirect('dashboard')
 
 
-def dashboard(request):
-    events = Event.objects.all()
-    context = {
-        "events": events
-    }
-    return render(request, 'dashboard.html', context)
+
+#for when user try book an event 
+def event_book(request,event_id):
+    event_obj = Event.objects.get(id=event_id)
+    form = BookingForm()
+    if request.method == "POST":
+        form = BookingForm(request.POST)
+        if form.is_valid():
+            seat=form.save(commit=False)
+            seat.event=event_obj
+            seat.user=request.user
+            if seat.seats_booked > event_obj.seats_available:
+                print ("erorrrrr no seat")
+
+            else:
+                event.number_of_seats -= seats.booked_seats
+                seat.save()
+                print("booked")
+               
+    context={
+    'event':event_obj,
+    'form':form
+    }        
+
+
+# if somone one tried to access by url but not a register user this page will show up
+def access(request):
+    return render(request,'access.html')
+

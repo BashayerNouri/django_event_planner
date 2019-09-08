@@ -12,6 +12,7 @@ urlpatterns = [
     path('create/', views.event_create, name='create'),
     path('update/<int:event_id>/', views.event_update, name='update'),
     path('delete/<int:event_id>/', views.event_delete, name='delete'),
+    path('no/access', views.access, name='no-access'),
     
 
 ]
